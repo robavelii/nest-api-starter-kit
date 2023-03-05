@@ -1,4 +1,5 @@
 import { IsEmail } from 'class-validator';
+import { Role } from 'src/auth/decorators/role.decorator';
 import {
   Column,
   CreateDateColumn,
@@ -19,6 +20,9 @@ export class User {
   @Column({ unique: true })
   @IsEmail()
   email: string;
+
+  @Column({ default: Role.User })
+  role: Role;
 
   @Column()
   phoneNumber: string;
