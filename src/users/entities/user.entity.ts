@@ -1,3 +1,4 @@
+import { IsEmail } from 'class-validator';
 import {
   Column,
   CreateDateColumn,
@@ -15,13 +16,14 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
+  @IsEmail()
   email: string;
 
   @Column()
   phoneNumber: string;
 
-  @Column()
+  @Column({ default: false })
   isEmailVerified: boolean;
 
   @CreateDateColumn()
