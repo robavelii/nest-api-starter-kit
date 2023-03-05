@@ -7,12 +7,15 @@ import {
   ParseUUIDPipe,
   Patch,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { Role, Roles } from 'src/auth/decorators/role.decorator';
+import { JwtAuthGuard, RolesGuard, SessionGuard } from 'src/auth/utils/Guards';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
+@UseGuards(SessionGuard || JwtAuthGuard, RolesGuard) // use one of either sessionGuard or JWTGuard depending on preference
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Get()

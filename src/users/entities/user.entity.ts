@@ -2,21 +2,11 @@ import * as bcrypt from 'bcryptjs';
 import { Exclude } from 'class-transformer';
 import { IsEmail } from 'class-validator';
 import { Role } from 'src/auth/decorators/role.decorator';
-import {
-  BeforeInsert,
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import BaseModel from 'src/auth/entities/baseModel.entity';
+import { BeforeInsert, Column, Entity } from 'typeorm';
 
 @Entity({ name: 'users' })
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class User extends BaseModel {
   @Column()
   name: string;
 
@@ -27,8 +17,8 @@ export class User {
   @Column({ default: Role.User })
   role: Role;
 
-  @Column()
   @Exclude()
+  @Column()
   password: string;
 
   @Column({ unique: true })
@@ -36,15 +26,6 @@ export class User {
 
   @Column({ default: false })
   isEmailVerified: boolean;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @DeleteDateColumn()
-  deletedAt: Date;
 
   @BeforeInsert()
   async hashPassword() {

@@ -1,3 +1,4 @@
+import { SessionEntity } from './auth/entities/session.entity';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -5,11 +6,13 @@ import { User } from './users/entities/user.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RouteLogger } from './middlewares/logger.middleware';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     TypeOrmModule.forRoot({
+      name: 'default',
       type: 'mysql',
       host: process.env.MYSQL_DB_HOST,
       port: process.env.MYSQL_DB_PORT,
@@ -17,14 +20,13 @@ import { RouteLogger } from './middlewares/logger.middleware';
       password: process.env.MYSQL_DB_PASSWORD,
       database: process.env.MYSQL_DB_NAME,
       synchronize: true,
-      entities: [User],
-      logging: true,
+      entities: [User, SessionEntity],
+      logging: false,
     }),
-    UsersModule,
     AuthModule,
+    UsersModule,
   ],
-  controllers: [],
-  providers: [],
+  providers: [JwtStrategy],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
