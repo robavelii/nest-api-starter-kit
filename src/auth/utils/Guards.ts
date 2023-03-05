@@ -1,10 +1,10 @@
+import { Reflector } from '@nestjs/core';
 import {
   Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { Role, ROLES_KEY } from '../decorators/role.decorator';
