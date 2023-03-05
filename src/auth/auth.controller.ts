@@ -18,7 +18,7 @@ export class AuthController {
   async login(
     @Request() req: ERequest & { user: User },
     @Body() loginUserDto: LoginUserDto,
-  ) {
+  ): Promise<{ token: string; status: string }> {
     return await this.authService.login(req.user);
   }
 

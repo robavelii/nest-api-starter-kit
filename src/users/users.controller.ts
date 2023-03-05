@@ -4,39 +4,40 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
-  Post,
+  Request,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { Role, Roles } from 'src/auth/decorators/role.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-  @Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createUser(createUserDto);
-  }
   @Get()
-  getAllUsers(): Promise<User[]> {
-    return this.usersService.getAllUsers();
+  async getAllUsers() {
+    const users = await this.usersService.getAllUsers();
+    return { status: 'Success', count: users.length, data: users };
   }
   @Get(':id')
-  getUser(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.getUser(id);
+  @Roles(Role.User, Role.Manager)
+  async getUser(
+    @Request() req: any,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    const user = await this.usersService.getUser(id);
+    return { status: 'Success', data: user };
   }
   @Patch(':id')
   updateUser(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.updateUser(id, updateUserDto);
   }
   @Delete(':id')
-  deleteUser(@Param('id', ParseIntPipe) id: number) {
+  deleteUser(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.usersService.deleteUser(id);
   }
 }

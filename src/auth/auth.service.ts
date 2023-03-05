@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoginUserDto } from 'src/users/dto/login-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -13,8 +12,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(createUserDto);
-    return user;
+    const user = await this.usersRepository.create(createUserDto);
+    return this.usersRepository.save(user);
   }
   async login(
     user: User,
@@ -29,7 +28,6 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersRepository.findOneBy({ email });
-
     if (user && (await User.comparePasswords(password, user.password))) {
       return user;
     }
