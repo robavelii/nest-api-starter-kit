@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { Email } from 'src/utils/email-config.utils';
 
 @Injectable()
 export class AuthService {
@@ -12,8 +13,21 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+    let user = this.usersRepository.create(createUserDto);
+
+    const emailToken = await user.createEmailVerificationCode();
+
+    try {
+      await new Email(user).sendEmailVerificationCode(emailToken);
+    } catch (error) {
+      throw new HttpException(
+        `Couldn't send Email ${error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    user = await this.usersRepository.save(user);
+    return user;
   }
   async login(
     user: User,
