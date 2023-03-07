@@ -1,10 +1,12 @@
+import * as crypto from 'crypto';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { Email } from 'src/utils/email-config.utils';
+import { EmailDto } from 'src/users/dto/email.dto';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +30,65 @@ export class AuthService {
 
     user = await this.usersRepository.save(user);
     return user;
+  }
+
+  async confirmEmail(
+    token: string,
+  ): Promise<{ status: string; user: object; jwt: string }> {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await this.usersRepository.findOneBy({
+      emailVerificationToken: hashedToken,
+      emailVerificationTokenExpires: MoreThanOrEqual(new Date(Date.now())),
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'Token invalid or expired',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationTokenExpires = null;
+
+    await user.save();
+
+    const jwt = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return { status: 'Sucess', user, jwt };
+  }
+
+  async resendVerification({ email }: EmailDto) {
+    const user = await this.usersRepository.findOneBy({
+      email,
+      isEmailVerified: false,
+    });
+
+    if (!user) {
+      throw new HttpException(
+        "User doesn't exsist or Email already Verified",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const emailToken = await user.createEmailVerificationCode();
+
+    await user.save();
+
+    try {
+      await new Email(user).sendEmailVerificationCode(emailToken);
+    } catch (error) {
+      throw new HttpException(
+        `Couldn't send email ${error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    return { status: 'Success', message: 'Verification Code sent', user };
   }
   async login(
     user: User,

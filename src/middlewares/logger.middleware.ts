@@ -14,7 +14,7 @@ export class RouteLogger implements NestMiddleware {
 
       this.logger.log(
         `DATE: [${new Date().toUTCString()}]  METHOD: [${method}]  ROUTE: [${originalUrl}]  STATUS CODE: [${statusCode}]  MESSAGE: [${statusMessage}]`,
-        `DATE: [${new Date().toUTCString()}] :-: USER-AGENT: [${userAgent}] :-: IP-ADDRESS: [${ip}] :-: METHOD: [${method}] :-: ROUTE: [${originalUrl}] :-: STATUS CODE: [${statusCode}] :-: MESSAGE: [${statusMessage}]`,
+        //`DATE: [${new Date().toUTCString()}] :-: USER-AGENT: [${userAgent}] :-: IP-ADDRESS: [${ip}] :-: METHOD: [${method}] :-: ROUTE: [${originalUrl}] :-: STATUS CODE: [${statusCode}] :-: MESSAGE: [${statusMessage}]`,
       );
     });
     nextFunction();

@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Post,
+  Param,
   Request,
   UseGuards,
   UseInterceptors,
@@ -33,6 +34,20 @@ export class AuthController {
     @Body() loginUserDto: LoginUserDto,
   ): Promise<{ token: string; status: string }> {
     return await this.authService.login(req.user);
+  }
+
+  @Post('verify/:token')
+  @HttpCode(200)
+  async confirmEmail(
+    @Param('token') token: string,
+  ): Promise<{ status: string; user: object; jwt: string }> {
+    return this.authService.confirmEmail(token);
+  }
+
+  @Post('resend-code')
+  @HttpCode(200)
+  async resendVerification(@Body() email) {
+    return this.authService.resendVerification(email);
   }
 
   @Get('logout')
