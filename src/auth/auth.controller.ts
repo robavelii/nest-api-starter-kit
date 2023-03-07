@@ -17,12 +17,14 @@ import {
   UseInterceptors,
   Res,
   Req,
+  Request,
 } from '@nestjs/common';
 import { LoginUserDto } from 'src/users/dto/login-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { AuthService } from './auth.service';
-import { Request, Response } from 'express';
+import { Request as ERequest, Response } from 'express';
+import { AuthenticatedRequest } from 'src/users/dto/user.interface';
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
@@ -49,7 +51,7 @@ export class AuthController {
 
   @UseGuards(SessionGuard)
   @Get('status')
-  login_session(@Req() req: Request, @Res() res: Response) {
+  login_session(@Req() req: ERequest, @Res() res: Response) {
     res.status(HttpStatus.OK).send({ status: 'Success', user: req.user });
   }
 
@@ -67,10 +69,15 @@ export class AuthController {
     return this.authService.resendVerification(email);
   }
 
-  // @Get('logout')
-  // @HttpCode(200)
-  // async logout(@Request() req) {
-  //   req.session.destroy();
-  //   return { status: 'Sucess', message: 'Logged out successfully' };
-  // }
+  @UseGuards(SessionGuard)
+  @Post('logout')
+  @HttpCode(200)
+  logout(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    // req.session.destroy();
+    req.logout((err) => {
+      return err
+        ? res.send(400)
+        : res.send({ status: 'Sucess', message: 'Logged out successfully' });
+    });
+  }
 }
