@@ -42,8 +42,8 @@ export const Email = class {
           port: 587,
           secure: false,
           auth: {
-            user: 'jdogg597@gmail.com',
-            pass: 'bminhrzplyhmtzyl',
+            user: 'DEV_EMAIL',
+            pass: 'EMAIL_PASSWORD',
           },
         });
         console.log(DEV_EMAIL, EMAIL_PASSWORD);

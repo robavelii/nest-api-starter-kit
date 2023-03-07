@@ -103,6 +103,6 @@ export class User extends BaseModel {
     this.passwordResetTokenExpires = date;
 
     // send the unencrypted reset token to users email
-    resetToken;
+    return resetToken;
   }
 }

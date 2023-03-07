@@ -8,6 +8,8 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { Email } from 'src/utils/email-config.utils';
 import { EmailDto } from 'src/users/dto/email.dto';
 import { UserInformation } from 'src/users/dto/user.interface';
+import { ResetPasswordDto } from 'src/users/dto/reset-password.dto';
+import { ChangePasswordDto } from 'src/users/dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -116,48 +118,110 @@ export class AuthService {
       );
     }
   }
-  // async login(
-  //   user: UserInformation,
-  // ): Promise<{ status: string; token: string }> {
-  //   try {
-  //     const found = await this.usersRepository.findOneBy({
-  //       email: user.email,
-  //       isEmailVerified: true,
-  //     });
-  //     if (found) {
-  //       const match: boolean = await User.comparePasswords(
-  //         found.password,
-  //         user.password,
-  //       );
-  //       console.log(match);
-  //       if (match) {
-  //         const token = await this.jwtService.signAsync({
-  //           sub: user.id,
-  //           email: user.email,
-  //           role: user.role,
-  //         });
-  //         console.log(found.id);
-  //         console.log(token);
-  //         return { status: 'Sucess', token };
-  //       } else {
-  //         throw new HttpException(
-  //           'Login Failed, Invalid Credentials',
-  //           HttpStatus.UNAUTHORIZED,
-  //         );
-  //       }
-  //     } else {
-  //       throw new HttpException(
-  //         'Login Failed, Invalid Credentials',
-  //         HttpStatus.UNAUTHORIZED,
-  //       );
-  //     }
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       'Login Failed, Invalid Credentials',
-  //       HttpStatus.UNAUTHORIZED,
-  //     );
-  //   }
-  // }
+
+  async forgotPassword({ email }: EmailDto) {
+    const user = await this.usersRepository.findOneBy({ email });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const resetToken = await user.createPasswordResetToken();
+
+    await user.save();
+
+    try {
+      await new Email(user).passwordResetToken(resetToken);
+      console.log(resetToken);
+    } catch (error) {
+      throw new HttpException(
+        `Couldn't send Email ${error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return {
+      status: 'Success',
+      message: 'Password Reset code sent to Email',
+      user,
+    };
+  }
+
+  async resetPassword({ resetToken, password }: ResetPasswordDto) {
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    const user = await this.usersRepository.findOneBy({
+      passwordResetToken: hashedToken,
+      passwordResetTokenExpires: MoreThanOrEqual(new Date(Date.now())),
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'User not found or token expired',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    user.password = password;
+    user.passwordResetToken = null;
+    user.passwordResetTokenExpires = null;
+
+    await user.save();
+
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return {
+      status: 'Success',
+      message: 'Password has been reset',
+      user,
+      token,
+    };
+  }
+
+  async changePassword(
+    loggedIn: User,
+    { oldPassword, newPassword }: ChangePasswordDto,
+  ) {
+    const user = await this.usersRepository.findOneBy({
+      id: loggedIn.id,
+      email: loggedIn.email,
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const validPassword = await User.comparePasswords(
+      oldPassword,
+      user.password,
+    );
+    if (!validPassword) {
+      throw new HttpException('Invalid Password', HttpStatus.UNAUTHORIZED);
+    }
+
+    user.password = newPassword;
+
+    await user.save();
+
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return {
+      status: 'Success',
+      message: 'Password has been changed',
+      user,
+      token,
+    };
+  }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersRepository.findOneBy({ email });
