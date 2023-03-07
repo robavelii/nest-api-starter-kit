@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RouteLogger } from './middlewares/logger.middleware';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
+import { LocalStrategy } from './auth/strategies/local.strategy';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { JwtStrategy } from './auth/strategies/jwt.strategy';
     AuthModule,
     UsersModule,
   ],
-  providers: [JwtStrategy],
+  providers: [JwtStrategy, LocalStrategy],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

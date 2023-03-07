@@ -7,6 +7,7 @@ import { MoreThanOrEqual, Repository } from 'typeorm';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { Email } from 'src/utils/email-config.utils';
 import { EmailDto } from 'src/users/dto/email.dto';
+import { UserInformation } from 'src/users/dto/user.interface';
 
 @Injectable()
 export class AuthService {
@@ -91,15 +92,72 @@ export class AuthService {
     return { status: 'Success', message: 'Verification Code sent', user };
   }
   async login(
-    user: User,
-  ): Promise<{ token: string; status: string; message: string }> {
-    const token = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
-    return { status: 'Success', message: 'Logged in successfully', token };
+    user: UserInformation,
+  ): Promise<{ token: string; status: string }> {
+    try {
+      const found = await this.validateUser(user.email, user.password);
+      if (found) {
+        const token = await this.jwtService.signAsync({
+          sub: user.id,
+          email: user.email,
+          role: user.role,
+        });
+        return { status: 'success', token };
+      } else {
+        throw new HttpException(
+          'Login Failed, Invalid Credentials',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+    } catch (error) {
+      throw new HttpException(
+        'Login Failed, Invalid Credentials',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
   }
+  // async login(
+  //   user: UserInformation,
+  // ): Promise<{ status: string; token: string }> {
+  //   try {
+  //     const found = await this.usersRepository.findOneBy({
+  //       email: user.email,
+  //       isEmailVerified: true,
+  //     });
+  //     if (found) {
+  //       const match: boolean = await User.comparePasswords(
+  //         found.password,
+  //         user.password,
+  //       );
+  //       console.log(match);
+  //       if (match) {
+  //         const token = await this.jwtService.signAsync({
+  //           sub: user.id,
+  //           email: user.email,
+  //           role: user.role,
+  //         });
+  //         console.log(found.id);
+  //         console.log(token);
+  //         return { status: 'Sucess', token };
+  //       } else {
+  //         throw new HttpException(
+  //           'Login Failed, Invalid Credentials',
+  //           HttpStatus.UNAUTHORIZED,
+  //         );
+  //       }
+  //     } else {
+  //       throw new HttpException(
+  //         'Login Failed, Invalid Credentials',
+  //         HttpStatus.UNAUTHORIZED,
+  //       );
+  //     }
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       'Login Failed, Invalid Credentials',
+  //       HttpStatus.UNAUTHORIZED,
+  //     );
+  //   }
+  // }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersRepository.findOneBy({ email });

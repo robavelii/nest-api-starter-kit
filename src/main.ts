@@ -23,7 +23,7 @@ async function bootstrap() {
   const repo = sessionRepository.getRepository(SessionEntity);
 
   app.setGlobalPrefix('api');
-  app.useGlobalFilters(new GlobalErrorHandler());
+  // app.useGlobalFilters(new GlobalErrorHandler());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.use(
