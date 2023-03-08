@@ -15,9 +15,29 @@ NODEMAILER
 PASSPORT
 AUTHENTICATION with JWT, SESSIONS, LOCAL AUTH
 
-# Contributing
+##### Install Dependencies
 
-To Contribute to this Project, Follow the Steps Below:
+```bash
+npm install
+
+```
+
+## Running the app
+
+```bash
+# development mode
+npm run start
+
+# watch mode
+npm run start:dev
+
+# production mode
+npm run start:prod
+```
+
+# Environment Variables
+
+Follow the Steps Below:
 
 ##### Create a `.env` file with these variables
 
@@ -40,36 +60,7 @@ SENDINBLUE_EMAIL_LOGIN=
 
 ```
 
-##### Installation
-
-```bash
-npm install
-
-```
-
-## Running the app
-
-```bash
-# development mode
-npm run start
-
-# watch mode
-npm run start:dev
-
-# production mode
-npm run start:prod
-```
-
-## Test
-
-```bash
-
-# unit tests
- npm run test
-
-```
-
-## Stay in touch
+## Reach out
 
 - Author - [Robel Fekadu](https://github.com/robavelii)
 - Email - [robavelii@protonmail.com]
