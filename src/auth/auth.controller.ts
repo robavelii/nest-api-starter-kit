@@ -20,7 +20,7 @@ import {
   Request,
   Patch,
 } from '@nestjs/common';
-import { LoginUserDto } from 'src/users/dto/login-user.dto';
+import { LoginLocalDto, LoginUserDto } from 'src/users/dto/login-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { AuthService } from './auth.service';
@@ -29,13 +29,20 @@ import { AuthenticatedRequest } from 'src/users/dto/user.interface';
 import { EmailDto } from '../users/dto/email.dto';
 import { ResetPasswordDto } from 'src/users/dto/reset-password.dto';
 import { ChangePasswordDto } from 'src/users/dto/change-password.dto';
+import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import { StandardResponse } from 'src/utils/respnse-utils';
+
+@ApiTags('Auth')
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   @Post('register')
   @HttpCode(201)
-  async registerUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+  @ApiCreatedResponse({ description: 'Registration succesful', type: User })
+  async registerUser(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<StandardResponse<User>> {
     return await this.authService.createUser(createUserDto);
   }
 
@@ -49,7 +56,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login-local')
-  login_local(@Res() res: Response) {
+  login_local(@Body() loginDto: LoginLocalDto, @Res() res: Response) {
     res.status(HttpStatus.OK).json({ message: 'Login Successful' });
   }
 
@@ -63,31 +70,39 @@ export class AuthController {
   @HttpCode(200)
   async confirmEmail(
     @Param('token') token: string,
-  ): Promise<{ status: string; user: object; jwt: string }> {
+  ): Promise<StandardResponse<User>> {
     return this.authService.confirmEmail(token);
   }
 
   @Post('resend-code')
   @HttpCode(200)
-  async resendVerification(@Body() email: EmailDto) {
+  async resendVerification(
+    @Body() email: EmailDto,
+  ): Promise<StandardResponse<User>> {
     return this.authService.resendVerification(email);
   }
 
   @Post('forgot-password')
   @HttpCode(200)
-  async forgotPassword(@Body() email: EmailDto) {
+  async forgotPassword(
+    @Body() email: EmailDto,
+  ): Promise<StandardResponse<User>> {
     return this.authService.forgotPassword(email);
   }
 
   @Post('resend-forgot-password')
   @HttpCode(200)
-  async resendForgotPassword(@Body() email: EmailDto) {
+  async resendForgotPassword(
+    @Body() email: EmailDto,
+  ): Promise<StandardResponse<User>> {
     return this.authService.forgotPassword(email);
   }
 
   @Patch('reset-password')
   @HttpCode(200)
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<StandardResponse<User>> {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
@@ -97,7 +112,7 @@ export class AuthController {
   async changePassword(
     @Request() req: ERequest & { user: User },
     @Body() changePasswordDto: ChangePasswordDto,
-  ) {
+  ): Promise<StandardResponse<User>> {
     return this.authService.changePassword(req.user, changePasswordDto);
   }
 

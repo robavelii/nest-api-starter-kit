@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import {
   BaseEntity,
@@ -8,6 +9,7 @@ import {
 } from 'typeorm';
 
 export default abstract class BaseModel extends BaseEntity {
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

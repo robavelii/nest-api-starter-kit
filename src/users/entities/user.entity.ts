@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { Exclude } from 'class-transformer';
@@ -10,23 +11,29 @@ import { addMinutes } from 'date-fns';
 @Entity({ name: 'users' })
 export class User extends BaseModel {
   @Column()
+  @ApiProperty()
   name: string;
 
   @Column({ unique: true })
   @IsEmail()
+  @ApiProperty()
   email: string;
 
   @Column({ default: Role.User })
+  @ApiProperty()
   role: Role;
 
-  @Exclude()
   @Column()
+  @Exclude()
+  @ApiProperty()
   password: string;
 
   @Column({ unique: true })
+  @ApiProperty()
   phoneNumber: string;
 
   @Column({ default: false })
+  @ApiProperty()
   isEmailVerified: boolean;
 
   @Column({ nullable: true })

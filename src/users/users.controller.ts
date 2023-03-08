@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -14,8 +15,9 @@ import { JwtAuthGuard, RolesGuard, SessionGuard } from 'src/auth/utils/Guards';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 
+@ApiTags('Users')
 @Controller('users')
-@UseGuards(SessionGuard || JwtAuthGuard, RolesGuard) // use one of either sessionGuard or JWTGuard depending on preference
+@UseGuards(SessionGuard || RolesGuard) // || JwtAuthGuard, RolesGuard) use one of either sessionGuard or JWTGuard depending on preference
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Get()
@@ -32,6 +34,7 @@ export class UsersController {
     const user = await this.usersService.getUser(id);
     return { status: 'Success', data: user };
   }
+  @UseGuards(SessionGuard)
   @Patch(':id')
   updateUser(
     @Param('id', new ParseUUIDPipe()) id: string,

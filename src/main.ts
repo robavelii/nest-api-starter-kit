@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import * as fs from 'fs';
 import { ValidationPipe } from '@nestjs/common';
 import { NestApplication, NestFactory } from '@nestjs/core';
 import { TypeormStore } from 'connect-typeorm/out';
@@ -8,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { SessionEntity } from './auth/entities/session.entity';
 import { GlobalErrorHandler } from './utils/all-exception-filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const { PORT } = process.env;
@@ -22,8 +24,9 @@ async function bootstrap() {
   }).initialize();
   const repo = sessionRepository.getRepository(SessionEntity);
 
+  app.enableCors({ credentials: true, origin: [`http://localhost:${PORT}`] });
   app.setGlobalPrefix('api');
-  // app.useGlobalFilters(new GlobalErrorHandler());
+  app.useGlobalFilters(new GlobalErrorHandler());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.use(
@@ -43,6 +46,22 @@ async function bootstrap() {
   );
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Nestjs API Starter Kit')
+    .setDescription(
+      'This is my API starter kit to build a NestJs Backend API. It comes with Authentication, Authorization and Email setup.',
+    )
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addCookieAuth()
+    .addServer(`http://localhost:${PORT}`)
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('/api-docs', app, document);
+  fs.writeFileSync('./swagger-documentation.json', JSON.stringify(document));
   await app.listen(PORT);
 }
 bootstrap();

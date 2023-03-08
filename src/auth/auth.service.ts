@@ -10,6 +10,7 @@ import { EmailDto } from 'src/users/dto/email.dto';
 import { UserInformation } from 'src/users/dto/user.interface';
 import { ResetPasswordDto } from 'src/users/dto/reset-password.dto';
 import { ChangePasswordDto } from 'src/users/dto/change-password.dto';
+import { ResponseUtil, StandardResponse } from 'src/utils/respnse-utils';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,9 @@ export class AuthService {
     @InjectRepository(User) private usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
   ) {}
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  async createUser(
+    createUserDto: CreateUserDto,
+  ): Promise<StandardResponse<User>> {
     let user = this.usersRepository.create(createUserDto);
 
     const emailToken = await user.createEmailVerificationCode();
@@ -32,14 +35,19 @@ export class AuthService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+    const hashedPassowrd = await User.hashPassword(user.password);
+
+    user.password = hashedPassowrd;
 
     user = await this.usersRepository.save(user);
-    return user;
+    return ResponseUtil.StandardResponse(
+      'Registration Successful',
+      'Verification code sent to Email',
+      user,
+    );
   }
 
-  async confirmEmail(
-    token: string,
-  ): Promise<{ status: string; user: object; jwt: string }> {
+  async confirmEmail(token: string): Promise<StandardResponse<User>> {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await this.usersRepository.findOneBy({
@@ -66,10 +74,12 @@ export class AuthService {
       role: user.role,
     });
 
-    return { status: 'Sucess', user, jwt };
+    return ResponseUtil.StandardResponse('Successful', 'Email Verified', user);
   }
 
-  async resendVerification({ email }: EmailDto) {
+  async resendVerification({
+    email,
+  }: EmailDto): Promise<StandardResponse<User>> {
     const user = await this.usersRepository.findOneBy({
       email,
       isEmailVerified: false,
@@ -93,7 +103,11 @@ export class AuthService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    return { status: 'Success', message: 'Verification Code sent', user };
+    return ResponseUtil.StandardResponse(
+      'Successful',
+      'Verification code resent to Email',
+      user,
+    );
   }
   async login(
     user: UserInformation,
@@ -121,7 +135,7 @@ export class AuthService {
     }
   }
 
-  async forgotPassword({ email }: EmailDto) {
+  async forgotPassword({ email }: EmailDto): Promise<StandardResponse<User>> {
     const user = await this.usersRepository.findOneBy({ email });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -141,14 +155,17 @@ export class AuthService {
       );
     }
 
-    return {
-      status: 'Success',
-      message: 'Password Reset code sent to Email',
+    return ResponseUtil.StandardResponse(
+      'Successful',
+      'Password reset code sent to Email',
       user,
-    };
+    );
   }
 
-  async resetPassword({ resetToken, password }: ResetPasswordDto) {
+  async resetPassword({
+    resetToken,
+    password,
+  }: ResetPasswordDto): Promise<StandardResponse<User>> {
     const hashedToken = crypto
       .createHash('sha256')
       .update(resetToken)
@@ -179,18 +196,17 @@ export class AuthService {
       role: user.role,
     });
 
-    return {
-      status: 'Success',
-      message: 'Password has been reset',
+    return ResponseUtil.StandardResponse(
+      'Successful',
+      'Password has been reset',
       user,
-      token,
-    };
+    );
   }
 
   async changePassword(
     loggedIn: User,
     { oldPassword, newPassword }: ChangePasswordDto,
-  ) {
+  ): Promise<StandardResponse<User>> {
     const user = await this.usersRepository.findOneBy({
       id: loggedIn.id,
       email: loggedIn.email,
@@ -220,12 +236,12 @@ export class AuthService {
       role: user.role,
     });
 
-    return {
-      status: 'Success',
-      message: 'Password has been changed',
+    return ResponseUtil.StandardResponse(
+      'Successful',
+      'Password changed',
       user,
       token,
-    };
+    );
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
