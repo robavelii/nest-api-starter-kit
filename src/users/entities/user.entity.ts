@@ -50,9 +50,14 @@ export class User extends BaseModel {
     Object.assign(this, partial);
   }
 
-  @BeforeInsert()
-  async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
+  /**
+   *  Hash Password before insert
+   * @param rawPassword string
+   * @param hashedPassword string
+   * @returns Promise<boolean>
+   */
+  static async hashPassword(rawpassword: string): Promise<string> {
+    return await bcrypt.hash(rawpassword, 10);
   }
 
   /**

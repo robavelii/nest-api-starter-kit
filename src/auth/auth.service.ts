@@ -21,9 +21,11 @@ export class AuthService {
     let user = this.usersRepository.create(createUserDto);
 
     const emailToken = await user.createEmailVerificationCode();
+    console.log(emailToken);
 
     try {
-      await new Email(user).sendEmailVerificationCode(emailToken);
+      const email = await new Email(user).sendEmailVerificationCode(emailToken);
+      console.log('inside auth service: ', email);
     } catch (error) {
       throw new HttpException(
         `Couldn't send Email ${error}`,
@@ -163,8 +165,9 @@ export class AuthService {
         HttpStatus.NOT_FOUND,
       );
     }
+    const hashNewPassowrd = await User.hashPassword(password);
 
-    user.password = password;
+    user.password = hashNewPassowrd;
     user.passwordResetToken = null;
     user.passwordResetTokenExpires = null;
 
@@ -205,7 +208,9 @@ export class AuthService {
       throw new HttpException('Invalid Password', HttpStatus.UNAUTHORIZED);
     }
 
-    user.password = newPassword;
+    const hashNewPassowrd = await User.hashPassword(newPassword);
+
+    user.password = hashNewPassowrd;
 
     await user.save();
 

@@ -11,7 +11,7 @@ import { LocalStrategy } from './auth/strategies/local.strategy';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       name: 'default',
       type: 'mysql',

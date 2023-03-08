@@ -42,11 +42,11 @@ export const Email = class {
           port: 587,
           secure: false,
           auth: {
-            user: 'DEV_EMAIL',
-            pass: 'EMAIL_PASSWORD',
+            user: DEV_EMAIL,
+            pass: EMAIL_PASSWORD,
           },
         });
-        console.log(DEV_EMAIL, EMAIL_PASSWORD);
+        console.log(mail);
         return mail;
       }
     };

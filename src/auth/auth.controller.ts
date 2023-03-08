@@ -69,7 +69,7 @@ export class AuthController {
 
   @Post('resend-code')
   @HttpCode(200)
-  async resendVerification(@Body() email) {
+  async resendVerification(@Body() email: EmailDto) {
     return this.authService.resendVerification(email);
   }
 
@@ -91,7 +91,7 @@ export class AuthController {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard) // can use @UseGuards(LocalAuthGuard) depending on needs.
   @Patch('change-password')
   @HttpCode(200)
   async changePassword(
