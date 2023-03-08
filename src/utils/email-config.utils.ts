@@ -2,13 +2,12 @@ import 'dotenv/config';
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 const {
-  DEV_EMAIL,
   EMAIL_USERNAME,
   EMAIL_PASSWORD,
   NODE_ENV,
-  PRODUCTION_SMTP_SERVER,
-  PRODUCTION_EMAIL_PASSWORD,
-  PRODUCTION_EMAIL_LOGIN,
+  SENDINBLUE_SMTP_SERVER,
+  SENDINBLUE_EMAIL_PASSWORD,
+  SENDINBLUE_EMAIL_LOGIN,
 } = process.env;
 
 //Email class
@@ -21,18 +20,18 @@ export const Email = class {
     this.to = user.email;
     this.name = user.name;
     this.url = url;
-    this.from = `Nest boilerplate <${DEV_EMAIL}>`;
+    this.from = `Nest boilerplate <${EMAIL_USERNAME}>`;
   }
 
   readonly newTransport =
     (): nodemailer.Transporter<SMTPTransport.SentMessageInfo> => {
       if (NODE_ENV === 'production') {
         return nodemailer.createTransport({
-          host: PRODUCTION_SMTP_SERVER,
+          host: SENDINBLUE_SMTP_SERVER,
           port: 465,
           auth: {
-            user: PRODUCTION_EMAIL_LOGIN,
-            pass: PRODUCTION_EMAIL_PASSWORD,
+            user: SENDINBLUE_EMAIL_LOGIN,
+            pass: SENDINBLUE_EMAIL_PASSWORD,
           },
         });
       } else {
@@ -42,7 +41,7 @@ export const Email = class {
           port: 587,
           secure: false,
           auth: {
-            user: DEV_EMAIL,
+            user: EMAIL_USERNAME,
             pass: EMAIL_PASSWORD,
           },
         });
